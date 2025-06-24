@@ -1,0 +1,31 @@
+# GameMaker temporary/output files
+/output/
+*.cache/
+*.log
+
+# Build artifacts
+*.zip
+*.exe
+*.dll
+*.yyz
+
+# Project backups
+*.backup
+*.tmp
+
+# IDE-specific files
+.vscode/
+.idea/
+*.code-workspace
+*.sublime-project
+*.sublime-workspace
+
+# OS/Tooling
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Optional: ignore user/project metadata
+*.yyp_user
+*.yyp_state
+*.user
