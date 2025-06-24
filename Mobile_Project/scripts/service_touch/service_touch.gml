@@ -19,7 +19,7 @@ global.service_touch_several = {
 	/// @param {real} y - Top-left Y of the area (ignored for FULL)
 	/// @param {real} w - Width of the area (ignored for FULL)
 	/// @param {real} h - Height of the area (ignored for FULL)
-	/// @param {enum} touch_type - Type of touch: VIEW, GUI, or FULL
+	/// @param {real} touch_type - Type of touch: VIEW, GUI, or FULL
 	/// @returns {real} Area index
 	create_area: function(x, y, w, h, touch_type) {
 	    array_push(self.areas, {
@@ -220,8 +220,8 @@ global.service_touch_several = {
 		       touch_data.y >= _y && touch_data.y < _y + _h;
 	},
 	
-	in_bounds_circle: function(touch_data, _radius) {
-		return touch_data.is_touch &&
-		       point_distance(touch_data.x, touch_data.y, touch_data.start_x, touch_data.start_y) <= _radius;
+	in_bounds_circle: function(touch_data, _x, _y, _radius) {
+	    return touch_data.is_touch &&
+	           point_distance(touch_data.x, touch_data.y, _x, _y) <= _radius;
 	}
 }
