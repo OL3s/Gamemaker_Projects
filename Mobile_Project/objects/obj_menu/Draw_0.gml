@@ -29,11 +29,10 @@ for (var i = 0; i < gui_count; i++) {
 
 /// DRAW TOP UI
 draw_set_halign(fa_left);
-var padding = 6,
-    gui_count = array_length(gui_top),
+	padding = 6;
+    gui_count = array_length(gui_top);
     width = room_width / (gui_count + 1);
-
-var _y = 8; // vertical position near top
+	_y = 8; // vertical position near top
 
 for (var i = 0; i < gui_count; i++) {
     var _x = width * i + width;
