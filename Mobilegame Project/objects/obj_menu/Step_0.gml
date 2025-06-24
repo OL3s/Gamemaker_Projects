@@ -1,1 +1,0 @@
-touch = global.service_touch_several.get(touch_index);
