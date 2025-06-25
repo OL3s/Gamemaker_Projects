@@ -1,0 +1,521 @@
+global.service_mapgen = {
+	
+	/// Creates an empty 2D array with the given width and height.
+	/// Each cell is initialized with the specified value.
+	/// Returns an array indexed as [y][x].
+	fill_empty: function(width, height, value) {
+		var _temp = [];
+		for (var yy=0; yy<height; yy++) {
+			_temp[yy] = array_create(width, value);
+		}
+		return _temp;
+	},
+	
+	/// Creates a deep clone of a 2D array using JSON serialization.
+	/// Useful for creating a working copy without modifying the original.
+	fill_clone: function(array) {
+		return json_parse(json_stringify(array))
+	},
+	
+	/// Fills the 2D array with random noise.
+	/// If is_float is true, values are floats between 0 and 1.
+	/// If is_float is false, values are integers 0 or 1.
+	/// Padding prevents changes to the outer border of the array.
+	add_noise: function(array, is_float, padding = 0) {
+		for (var yy=padding; yy<array_length(array)-padding; yy++) {
+			for (var xx=padding; xx<array_length(array[0])-padding; xx++) {
+				array[yy][xx] = (is_float) ? random(1) : irandom(1);
+			}
+		}
+	},
+	
+	/// Mirrors a 2D array horizontally and/or vertically.
+	/// Horizontal mirrors each row left-to-right.
+	/// Vertical mirrors the entire array top-to-bottom.
+	/// Modifies the array in-place and increases its size accordingly.
+	add_mirror: function(array, horizontal, vertical) {
+		var sm = global.service_mapgen;
+		var width = sm.get_array_width(array);
+		var height = sm.get_array_height(array);
+
+		// First mirror horizontally
+		if (horizontal) {
+			for (var yy = 0; yy < height; yy++) {
+				for (var xx = 0; xx < width; xx++) {
+					var mirror_val = sm.get_point(array, width - 1 - xx, yy);
+					array[yy][array_length(array[yy])] = mirror_val; // append to row
+				}
+			}
+			width *= 2;
+		}
+
+		// Then mirror vertically
+		if (vertical) {
+			for (var yy = 0; yy < height; yy++) {
+				// Copy whole row and append mirrored row
+				var new_row = [];
+				for (var xx = 0; xx < width; xx++) {
+					new_row[xx] = sm.get_point(array, xx, height - 1 - yy);
+				}
+				array[array_length(array)] = new_row; // append as new row
+			}
+		}
+	},
+
+	
+	/// Creates a random snake pattern in the array with value 1.
+	/// Snake moves randomly within bounds, with optional thickness and border.
+	/// Avoids overwriting non-zero cells, and clamps start position within valid area.
+	add_snake: function(array, length, x_start, y_start, padding = 0, border = 0, empty_value = 0, set_value = 1) {
+		var sm = global.service_mapgen;
+		var set_border = padding + border;
+		
+		// Invalids
+		if (length > (array_length(array) * array_length(array[0]) / 2)) throw("length out of bounds");
+		
+		// Clamp x_start and y_start
+		var pos = set_border;
+		if (x_start < pos) x_start = pos;
+		
+		pos = array_length(array[0]) - set_border - 1;
+		if (x_start > pos) x_start = pos;
+		
+		pos = set_border;
+		if (y_start < pos) y_start = pos;
+		
+		pos = array_length(array) - set_border - 1;
+		if (y_start > pos) y_start = pos;
+		
+		var xx = x_start, yy = y_start;
+		sm.set_rectangle(array, xx, yy, 1, padding)
+		
+		while(length > 0) {
+			var dir = irandom(3);
+			
+			switch(dir) {
+				case 0: if (sm.get_in_bounds(array, xx - 1, yy, set_border)) xx -= 1; break;
+				case 1: if (sm.get_in_bounds(array, xx + 1, yy, set_border)) xx += 1; break;
+				case 2: if (sm.get_in_bounds(array, xx, yy - 1, set_border)) yy -= 1; break;
+				case 3: if (sm.get_in_bounds(array, xx, yy + 1, set_border)) yy += 1; break;
+			}
+			
+			if (sm.get_point(array, xx, yy) == empty_value) {
+				length -= 1;
+				if		(padding == 1) sm.set_point(array, xx, yy, set_value);
+				else if (padding > 1) sm.set_rectangle(array, xx, yy, set_value, padding)
+			}
+			
+		}
+	},
+	
+	/// Sets the value of a specific cell in the array at [y][x].
+	/// Ignores if the coordinates are out of bounds.
+	set_point: function(array, xx, yy, value) {
+		var sm = global.service_mapgen;
+		if (sm.get_in_bounds(array, xx, yy)) {
+			array[yy][xx] = value;
+		}
+	},
+	
+	/// Sets a square region of cells around (x, y) to a given value.
+	/// Radius determines how far out from the center to affect cells.
+	set_rectangle: function(array, xx, yy, value, radius) {
+		var sm = global.service_mapgen;
+		for (var yyy = yy - radius; yyy <= yy + radius; yyy++) {
+			for (var xxx = xx - radius; xxx <= xx + radius; xxx++) {
+				sm.set_point(array, xxx, yyy, value);
+			}
+		}
+	},
+	
+	/// Returns the sum of all values in a square region around (x, y).
+	/// Radius defines the size, and out-of-bounds cells use a fallback value.
+	get_rectangle_total: function(array, xx, yy, radius, out_of_bounds_val = 0) {
+		var value = 0, sm = global.service_mapgen;
+	
+		for (var _y = yy - radius; _y <= yy + radius; _y++) for (var _x = xx - radius; _x <= xx + radius; _x++) {
+			if (!sm.get_in_bounds(array, _x, _y)) {
+				value += out_of_bounds_val;
+			} else {
+				value += sm.get_point(array, _x, _y);
+			}
+		}
+	
+		return value;
+	},
+
+	
+	/// Checks if a point (x, y) is inside the array bounds.
+	/// Optional padding excludes edges by offsetting the boundary.
+	get_in_bounds: function(array, xx, yy, padding = 0) {
+		if (xx < padding || xx >= array_length(array[0]) - padding) return false;
+		if (yy < padding || yy >= array_length(array) - padding) return false;
+		return true;
+	},
+	
+	/// Returns the value at (x, y) in the array.
+	/// If the point is out of bounds, returns a fallback error_value.
+	get_point: function(array, xx, yy, error_value = 0) {
+		var sm = global.service_mapgen;
+		return sm.get_in_bounds(array, xx, yy) ? array[yy][xx] : error_value;
+	},
+	
+	/// Returns the number of columns (width) of the 2D array.
+	get_array_width: function(array) {
+		return array_length(array[0]);
+	},
+	
+	/// Returns the number of rows (height) of the 2D array.
+	get_array_height: function(array){
+		return array_length(array);
+	},
+	
+	/// Smooths the array by averaging values in a neighborhood.
+	/// Radius defines the smoothing area. Strength controls blend amount.
+	/// Repeats defines how many times to apply the smoothing pass.
+	apply_smooth: function(array, radius, strength, out_of_bounds_value = 0, repeats = 1) {
+		var sm = global.service_mapgen;
+		var width = sm.get_array_width(array);
+		var height = sm.get_array_height(array);
+	
+		repeat(repeats) {
+			var copy = sm.fill_clone(array);
+			for (var yy = 0; yy < height; yy++) {
+				for (var xx = 0; xx < width; xx++) {
+					var total = sm.get_rectangle_total(copy, xx, yy, radius, out_of_bounds_value);
+					
+					var count = sqr(1 + 2 * radius);
+					var avg = total / count;
+					var current = sm.get_point(copy, xx, yy);
+			
+					var new_val = lerp(current, avg, strength);
+					sm.set_point(array, xx, yy, new_val);
+				}
+			}
+		}
+	},
+	
+	/// Flips the array horizontally and/or vertically in place.
+	/// Horizontal swaps columns left-to-right.
+	/// Vertical swaps rows top-to-bottom.
+	apply_flip: function(array, horizontal, vertical) {
+		var sm = global.service_mapgen;
+		var width = sm.get_array_width(array);
+		var height = sm.get_array_height(array);
+
+		// Horizontal flip
+		if (horizontal) {
+			for (var yy = 0; yy < height; yy++) {
+				for (var xx = 0; xx < width / 2; xx++) {
+					var opp_x = width - 1 - xx;
+
+					// Swap [yy][xx] <-> [yy][opp_x]
+					var temp = array[yy][xx];
+					array[yy][xx] = array[yy][opp_x];
+					array[yy][opp_x] = temp;
+				}
+			}
+		}
+
+		// Vertical flip
+		if (vertical) {
+			for (var yy = 0; yy < height / 2; yy++) {
+				var opp_yy = height - 1 - yy;
+
+				// Swap rows yy <-> opp_yy
+				var temp_row = array[yy];
+				array[yy] = array[opp_yy];
+				array[opp_yy] = temp_row;
+			}
+		}
+	},
+	
+	/// Merges multiple arrays by averaging values per cell.
+	/// Arrays can be of different sizes; result matches the largest.
+	/// Cells out of bounds in shorter arrays use out_of_bounds_value.
+	create_merge: function(arrays, out_of_bounds_value = 0) {
+		var sm = global.service_mapgen;
+		var count = array_length(arrays);
+
+		// Find max width and max height
+		var max_width = 0;
+		var max_height = 0;
+
+		for (var i = 0; i < count; i++) {
+			max_width  = max(max_width,  sm.get_array_width(arrays[i]));
+			max_height = max(max_height, sm.get_array_height(arrays[i]));
+		}
+
+		// Create new array
+		var result = sm.fill_empty(max_width, max_height, out_of_bounds_value);
+
+		// Now merge
+		for (var yy = 0; yy < max_height; yy++) {
+			for (var xx = 0; xx < max_width; xx++) {
+				var total = 0;
+
+				// Sum this cell across all arrays
+				for (var i = 0; i < count; i++) {
+					if (sm.get_in_bounds(arrays[i], xx, yy, 0)) {
+						total += sm.get_point(arrays[i], xx, yy);
+					} else {
+						total += out_of_bounds_value;
+					}
+				}
+
+				// Write average into result array
+				var avg = total / count;
+				sm.set_point(result, xx, yy, avg);
+			}
+		}
+
+		return result;
+	},
+	
+	/// Overlays multiple 2D arrays into one array.
+	/// Later arrays overwrite earlier values if not equal to ignore_value.
+	/// Result matches the size of the largest input array.
+	create_overlap: function(arrays, ignore_value = 0) {
+		var sm = global.service_mapgen;
+		var count = array_length(arrays);
+
+		var max_width = 0;
+		var max_height = 0;
+
+		for (var i = 0; i < count; i++) {
+			max_width  = max(max_width,  sm.get_array_width(arrays[i]));
+			max_height = max(max_height, sm.get_array_height(arrays[i]));
+		}
+
+		var _return = sm.fill_empty(max_width, max_height, ignore_value);
+
+		for (var i = 0; i < count; i++) {
+			var width  = sm.get_array_width(arrays[i]);
+			var height = sm.get_array_height(arrays[i]);
+
+			for (var yy = 0; yy < height; yy++) {
+				for (var xx = 0; xx < width; xx++) {
+					var val = sm.get_point(arrays[i], xx, yy);
+					if (val != ignore_value) sm.set_point(_return, xx, yy, val);
+				}
+			}
+		}
+
+		return _return;
+	},
+
+	/// Creates a mask based on a value range in the input array.
+	/// Cells within threshold_min and threshold_max are copied as export_value.
+	/// All other cells remain 0.
+	create_exclude_threshold: function(array, threshold_min, threshold_max, export_value) {
+		var sm = global.service_mapgen;
+		var width = sm.get_array_width(array);
+		var height = sm.get_array_height(array);
+
+		var _return = sm.fill_empty(width, height, 0);
+
+		for (var yy = 0; yy < height; yy++) {
+			for (var xx = 0; xx < width; xx++) {
+				var value = sm.get_point(array, xx, yy);
+				if (value >= threshold_min && value <= threshold_max) {
+					sm.set_point(_return, xx, yy, export_value);
+				}
+			}
+		}
+
+		return _return;
+	},
+	
+	/// Sets values in the first array to a new value if the same cell
+	/// in the comparison array matches a specified value.
+	remove_on_matching: function(array, array_to_compare, value_to_check, value_to_set) {
+		var sm = global.service_mapgen;
+
+		var width1  = sm.get_array_width(array);
+		var width2  = sm.get_array_width(array_to_compare);
+		var width   = min(width1, width2);
+
+		var height1 = sm.get_array_height(array);
+		var height2 = sm.get_array_height(array_to_compare);
+		var height  = min(height1, height2);
+
+		for (var yy = 0; yy < height; yy++) {
+			for (var xx = 0; xx < width; xx++) {
+				if (sm.get_point(array_to_compare, xx, yy) == value_to_check) {
+					sm.set_point(array, xx, yy, value_to_set);
+				}
+			}
+		}
+	},
+
+
+
+	/// Returns the highest value found in the array.
+	get_value_max: function(array) {
+		var sm = global.service_mapgen;
+		var width = sm.get_array_width(array);
+		var height = sm.get_array_height(array);
+	
+		var max_value = 0;
+	
+		for (var yy = 0; yy < height; yy++) {
+			for (var xx = 0; xx < width; xx++) {
+				var val = sm.get_point(array, xx, yy);
+				if (val > max_value) max_value = val;
+			}
+		}
+	
+		return max_value;
+	},
+
+	/// Returns the lowest value found in the array.
+	get_value_min: function(array) {
+		var sm = global.service_mapgen;
+		var width = sm.get_array_width(array);
+		var height = sm.get_array_height(array);
+	
+		var min_value = 0;
+	
+		for (var yy = 0; yy < height; yy++) {
+			for (var xx = 0; xx < width; xx++) {
+				var val = sm.get_point(array, xx, yy);
+				if (val < min_value) min_value = val;
+			}
+		}
+	
+		return min_value;
+	},
+	
+	/// Returns both the lowest and highest value in the array as [min, max].
+	get_value_clamp: function(array) {
+		var sm = global.service_mapgen;
+		var width = sm.get_array_width(array);
+		var height = sm.get_array_height(array);
+	
+		var min_value = 0, max_value = 0;
+	
+		for (var yy = 0; yy < height; yy++) {
+			for (var xx = 0; xx < width; xx++) {
+				var val = sm.get_point(array, xx, yy);
+				if (val < min_value) min_value = val;
+				if (val > max_value) max_value = val;
+			}
+		}
+	
+		return [min_value, max_value];
+	},
+	
+	/// Draws the array visually as rectangles colored between two values.
+	/// Each value is normalized between min and max and colored accordingly.
+	/// grid_size controls how large each cell is drawn.	///
+	draw: function(array, color_min, color_max, grid_size) {
+		var sm = global.service_mapgen;
+		var value_clamp = sm.get_value_clamp(array);
+		var min_value = value_clamp[0];
+		var max_value = value_clamp[1];
+	
+		var width = sm.get_array_width(array);
+		var height = sm.get_array_height(array);
+	
+		for (var yy = 0; yy < height; yy++) {
+			for (var xx = 0; xx < width; xx++) {
+				var val = sm.get_point(array, xx, yy);
+			
+				// Normalize between 0..1
+				var t = 0;
+				if (max_value != min_value) {
+					t = (val - min_value) / (max_value - min_value);
+				}
+			
+				var col = merge_color(color_min, color_max, t);
+			
+				draw_set_color(col);
+				draw_rectangle(xx * grid_size, yy * grid_size, (xx + 1) * grid_size, (yy + 1) * grid_size, false);
+			}
+		}
+		
+		draw_set_color(c_white)
+		
+	},
+	
+	/// Renders the array to a surface using a color gradient.
+	/// Returns the surface ID or -1 if surface creation failed.
+	create_surface: function(array, color_min, color_max, grid_size) {
+		var sm = global.service_mapgen;
+		var width = sm.get_array_width(array);
+		var height = sm.get_array_height(array);
+
+		var surface_width  = width * grid_size;
+		var surface_height = height * grid_size;
+
+		var surf = surface_create(surface_width, surface_height);
+		if (!surface_exists(surf)) return -1;
+
+		var value_clamp = sm.get_value_clamp(array);
+		var min_value = value_clamp[0];
+		var max_value = value_clamp[1];
+
+		// Draw to surface
+		surface_set_target(surf);
+		draw_clear_alpha(c_black, 0);
+
+		for (var yy = 0; yy < height; yy++) {
+			for (var xx = 0; xx < width; xx++) {
+				var val = sm.get_point(array, xx, yy);
+
+				// Normalize between 0..1
+				var t = 0;
+				if (max_value != min_value) {
+					t = (val - min_value) / (max_value - min_value);
+				}
+
+				var col = merge_color(color_min, color_max, t);
+
+				draw_set_color(col);
+				draw_rectangle(xx * grid_size, yy * grid_size, (xx + 1) * grid_size, (yy + 1) * grid_size, false);
+			}
+		}
+
+		draw_set_color(c_white);
+		surface_reset_target();
+
+		return surf;
+	},
+
+	/// Prints a visual representation of the array to the debug log.
+	/// Values are mapped to characters representing intensity.	
+	print: function(array) {
+		
+		var sm = global.service_mapgen;
+		var width = sm.get_array_width(array);
+		var height = sm.get_array_height(array);
+		var max_value = sm.get_value_max(array);
+
+		// Characters from empty → full
+		var chars = " .:-=+*#%@";
+
+		var char_count = string_length(chars);
+
+		show_debug_message($"\nPRINTING MAP ({width}x{height}) =>")
+		for (var yy = 0; yy < height; yy++) {
+			var row_str = "";
+			for (var xx = 0; xx < width; xx++) {
+				var val = sm.get_point(array, xx, yy);
+
+				// Normalize
+				var t = (max_value != 0) ? val / max_value : 0;
+
+				// Clamp t
+				t = clamp(t, 0, 1);
+
+				// Map to character index
+				var index = floor(t * (char_count - 1)) + 1;
+
+				// Append character
+				row_str += string_char_at(chars, index) + " ";
+			}
+			// Print row
+			show_debug_message(row_str);
+		}
+	},
+};

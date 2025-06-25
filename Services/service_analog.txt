@@ -1,0 +1,87 @@
+global.service_analog = {
+    deadzone: 0.2,
+
+    get: function(device) {
+        var read_stick = function(is_right, device) {
+            var ax = 0;
+            var ay = 0;
+
+            if (device < 0) {
+                if (!is_right) {
+                    ax = keyboard_check(ord("D")) - keyboard_check(ord("A"));
+                    ay = keyboard_check(ord("S")) - keyboard_check(ord("W"));
+                } else {
+                    ax = keyboard_check(vk_right) - keyboard_check(vk_left);
+                    ay = keyboard_check(vk_down)  - keyboard_check(vk_up);
+                }
+            } else {
+                if (!is_right) {
+                    ax = gamepad_axis_value(device, gp_axislh);
+                    ay = gamepad_axis_value(device, gp_axislv);
+                } else {
+                    ax = gamepad_axis_value(device, gp_axisrh);
+                    ay = gamepad_axis_value(device, gp_axisrv);
+                }
+            }
+
+            var mag = point_distance(0, 0, ax, ay);
+            var strength = 0;
+
+            if (mag >= self.deadzone) {
+                var scale = (mag - self.deadzone) / (1 - self.deadzone);
+                scale = clamp(scale, 0, 1);
+                ax /= mag;
+                ay /= mag;
+                ax *= scale;
+                ay *= scale;
+                strength = scale;
+            } else {
+                ax = 0;
+                ay = 0;
+                strength = 0;
+            }
+
+            return {
+                analog_x: ax,
+                analog_y: ay,
+                direction: (strength > 0) ? point_direction(0, 0, ax, ay) : 0,
+                strength: strength
+            };
+        };
+
+        var buttons = (device < 0)
+            ? {
+                A: keyboard_check(vk_space),
+                B: keyboard_check(vk_shift),
+                X: keyboard_check(ord("E")),
+                Y: keyboard_check(ord("Q"))
+            }
+            : {
+                A: gamepad_button_check(device, gp_face1),
+                B: gamepad_button_check(device, gp_face2),
+                X: gamepad_button_check(device, gp_face3),
+                Y: gamepad_button_check(device, gp_face4)
+            };
+
+        return {
+            left: read_stick(false, device),
+            right: read_stick(true, device),
+            buttons: buttons
+        };
+    },
+
+    draw: function(_x, _y, device) {
+        var result = self.get(device);
+        var r = 32;
+
+        draw_circle(_x, _y, r, true);
+        var dx = result.left.analog_x * r;
+        var dy = result.left.analog_y * r;
+        draw_circle(_x + dx, _y + dy, 4, false);
+
+        draw_circle(_x + 100, _y, r, true);
+        dx = result.right.analog_x * r;
+        dy = result.right.analog_y * r;
+        draw_circle(_x + 100 + dx, _y + dy, 4, false);
+    }
+};

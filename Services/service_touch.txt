@@ -1,0 +1,136 @@
+global.service_touch = {
+    _prev_down: false,
+    _prev_x: 0,
+    _prev_y: 0,
+    start_x: 0,
+    start_y: 0,
+    hold_start_time: 0,
+    _has_held: false,
+    _has_dragged: false,
+
+    analog_threshold: 32,
+    analog_deadzone: .2,
+    drag_threshold: 16,
+    hold_time_ms: 400,
+
+    /// Returns a struct representing current touch state.
+    /// Includes raw positions, drag/hold flags, and analog data.
+    /// @returns {struct}
+    get: function() {
+        var _x = device_mouse_x(0);
+        var _y = device_mouse_y(0);
+        var _x_gui = device_mouse_x_to_gui(0);
+        var _y_gui = device_mouse_y_to_gui(0);
+        var _down = device_mouse_check_button(0, mb_left);
+
+        var _is_pressed = _down && !self._prev_down;
+        var _is_released = !_down && self._prev_down;
+
+        if (_is_pressed) {
+            self.start_x = _x;
+            self.start_y = _y;
+            self.hold_start_time = current_time;
+            self._has_held = false;
+            self._has_dragged = false;
+        }
+
+        var _dx = _x - self._prev_x;
+        var _dy = _y - self._prev_y;
+        var _dx_total = _x - self.start_x;
+        var _dy_total = _y - self.start_y;
+
+        if (_down && !self._has_dragged && (
+            abs(_dx_total) >= self.drag_threshold ||
+            abs(_dy_total) >= self.drag_threshold
+        )) {
+            self._has_dragged = true;
+        }
+
+        if (_down && !self._has_held && !self._has_dragged &&
+            (current_time - self.hold_start_time >= self.hold_time_ms)) {
+            self._has_held = true;
+        }
+
+        var _is_holding = _down && self._has_held;
+        var _is_dragging = _down && self._has_dragged;
+
+        self._prev_down = _down;
+        self._prev_x = _x;
+        self._prev_y = _y;
+
+        var is_touch = _down || _is_released;
+
+        var analog_x = 0;
+        var analog_y = 0;
+        var analog_strength = 0;
+        var analog_direction = 0;
+
+        if (_down) {
+            var norm_x = _dx_total / self.analog_threshold;
+            var norm_y = _dy_total / self.analog_threshold;
+            var mag = point_distance(0, 0, norm_x, norm_y);
+
+            if (mag >= self.analog_deadzone) {
+                var scaled = (mag - self.analog_deadzone) / (1 - self.analog_deadzone);
+                scaled = clamp(scaled, 0, 1);
+                analog_x = (norm_x / mag) * scaled;
+                analog_y = (norm_y / mag) * scaled;
+                analog_strength = scaled;
+                analog_direction = point_direction(0, 0, analog_x, analog_y);
+            }
+        }
+
+        return {
+            x: is_touch ? _x : -1,
+            y: is_touch ? _y : -1,
+            x_gui: is_touch ? _x_gui : -1,
+            y_gui: is_touch ? _y_gui : -1,
+            dx: _down ? _dx : 0,
+            dy: _down ? _dy : 0,
+            dx_total: _down ? _dx_total : 0,
+            dy_total: _down ? _dy_total : 0,
+            is_down: _down,
+            is_pressed: _is_pressed,
+            is_released: _is_released,
+            is_holding: _is_holding,
+            is_dragging: _is_dragging,
+            has_dragged: self._has_dragged,
+            is_touch: is_touch,
+            analog_x: analog_x,
+            analog_y: analog_y,
+            analog_strength: analog_strength,
+            analog_direction: analog_direction
+        };
+    },
+
+    draw: function(enable_analog = true, enable_touch = true) {
+        var result = self.get();
+
+        if result.is_touch {
+
+            if enable_analog {
+                draw_set_color(c_gray);
+                var st = global.service_touch;
+                draw_circle(st.start_x, st.start_y, st.analog_threshold, true);
+                draw_circle(st.start_x + result.analog_x * st.analog_threshold, st.start_y + result.analog_y * st.analog_threshold, 8, false);
+            }
+
+            if enable_touch {
+                var col = c_white;
+                if result.is_dragging col = c_orange;
+                if result.is_holding col = c_lime;
+                if result.is_holding && result.is_dragging col = c_aqua;
+                draw_set_color(col);
+                draw_circle(result.x, result.y, 6, true);
+
+                draw_set_color(c_blue);
+                draw_line(self.start_x, self.start_y, result.x, result.y);
+
+                draw_set_color(c_yellow);
+                draw_line(result.x, result.y, result.x + result.dx * 4, result.y + result.dy * 4);
+            }
+
+            draw_set_color(c_white);
+        }
+    }
+};
