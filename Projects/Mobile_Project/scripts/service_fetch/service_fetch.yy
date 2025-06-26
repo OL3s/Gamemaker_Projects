@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"service_fetch",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"service_fetch",
+  "parent":{
+    "name":"Scripts",
+    "path":"folders/Scripts.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

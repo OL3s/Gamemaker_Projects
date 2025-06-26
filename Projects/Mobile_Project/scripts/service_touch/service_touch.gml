@@ -162,6 +162,7 @@ global.service_touch_several = {
 	        is_released: _is_released,
 	        is_holding: _is_holding,
 	        is_dragging: _is_dragging,
+			is_tap: _is_released && !area._has_dragged && !area._has_held,
 	        has_dragged: area._has_dragged,
 	        is_touch: is_touch,
 	        analog_x: analog_x,

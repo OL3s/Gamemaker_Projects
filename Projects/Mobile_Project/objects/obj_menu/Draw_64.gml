@@ -1,0 +1,1 @@
+if (global.debug) draw_text(1, 1, fps_real)
