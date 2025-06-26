@@ -40,6 +40,7 @@
     {"id":{"name":"obj_start","path":"objects/obj_start/obj_start.yy",},},
     {"id":{"name":"obj_touch_split","path":"objects/obj_touch_split/obj_touch_split.yy",},},
     {"id":{"name":"rom_dungeon","path":"rooms/rom_dungeon/rom_dungeon.yy",},},
+    {"id":{"name":"rom_end","path":"rooms/rom_end/rom_end.yy",},},
     {"id":{"name":"rom_nextFloor","path":"rooms/rom_nextFloor/rom_nextFloor.yy",},},
     {"id":{"name":"rom_start","path":"rooms/rom_start/rom_start.yy",},},
     {"id":{"name":"rom_tutorial","path":"rooms/rom_tutorial/rom_tutorial.yy",},},
@@ -68,6 +69,7 @@
     {"roomId":{"name":"rom_nextFloor","path":"rooms/rom_nextFloor/rom_nextFloor.yy",},},
     {"roomId":{"name":"rom_dungeon","path":"rooms/rom_dungeon/rom_dungeon.yy",},},
     {"roomId":{"name":"rom_tutorial","path":"rooms/rom_tutorial/rom_tutorial.yy",},},
+    {"roomId":{"name":"rom_end","path":"rooms/rom_end/rom_end.yy",},},
   ],
   "templateType":"game",
   "TextureGroups":[

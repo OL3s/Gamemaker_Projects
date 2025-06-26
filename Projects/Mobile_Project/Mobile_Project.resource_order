@@ -20,6 +20,7 @@
     {"name":"obj_menu","order":1,"path":"objects/obj_menu/obj_menu.yy",},
     {"name":"obj_start","order":2,"path":"objects/obj_start/obj_start.yy",},
     {"name":"rom_dungeon","order":2,"path":"rooms/rom_dungeon/rom_dungeon.yy",},
+    {"name":"rom_end","order":4,"path":"rooms/rom_end/rom_end.yy",},
     {"name":"rom_nextFloor","order":1,"path":"rooms/rom_nextFloor/rom_nextFloor.yy",},
     {"name":"rom_tutorial","order":3,"path":"rooms/rom_tutorial/rom_tutorial.yy",},
     {"name":"service_combat","order":4,"path":"scripts/service_combat/service_combat.yy",},

@@ -193,13 +193,13 @@ else if (menu_index == 4) {
 			// execute
 			if touch.is_tap && global.service_touch_several.in_bounds_rect(touch, _x, _y, contract_w, contract_h) {
 				contract_index = i;
-				state = "start";
+				state = "selected";
 				audio_play_sound(snd_click, 1, 0)
 			}
 		}
 	}
 	
-	else if state == "start" {
+	else if state == "selected" {
 		// Get selected contract
 		if (contract_index < 0 || contract_index >= array_length(data_contract)) exit;
 		var contract = data_contract[contract_index];

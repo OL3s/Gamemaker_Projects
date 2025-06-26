@@ -1,72 +1,141 @@
-## 📘 General Overview
+# Path of Salvation
 
-**Path of Salvation** is a pixel-style, real-time dungeon crawler where your ultimate goal is to collect all three legendary gems. Each gem is earned by defeating one of the three unique final bosses. Once you have collected all three gems, the game resets for a new challenge.
-
-### Gameplay Loop
-
-1. Start in the Sanctuary (the main hub)
-2. Choose up to 3 missions to pursue during your run
-3. Buy and equip gear, and assign abilities to prepare for battle
-4. Enter a series of dungeon rounds (waves 0–9), each wave is a new dungeon
-5. At wave 10, face one of three random final bosses—defeat them to earn their unique gem
-6. Collect gold and rewards from loot and completed missions
-7. Repeat runs to collect all three gems; after all are collected, the game is reset for replayability
-
-### Menu Overview
-
-- **Sanctuary:** The main hub and starting point of your adventure
-- **Contracts:** Menu where you choose missions for your run (up to 3)
-- **Armory:** Shop where you can buy new gear and equipment
-- **Loadout:** Menu to equip your character with weapons and armor
-- **Skills:** Menu to assign and upgrade your abilities
+A pixel-style, real-time dungeon crawler for mobile platforms. Your ultimate goal is to collect all three legendary gems, each earned by defeating a unique final boss. After collecting a gem, the game resets for a new challenge.
 
 ---
 
-## 🛠 Technical Documentation
+# 📘 General Overview
 
-### Core Room Structure
+## Gameplay Loop
 
-- Room transitions are handled by direct calls to `room_goto()` in menu actions (no central controller object)
-- Main rooms:
-  - **rom_start:** Main menu (continue, new run, or tutorial)
-  - **rom_nextFloor:** Main navigation and menu (store, change equipment, home, abilities, mission selection)
-  - **rom_dungeon:** Dungeon gameplay room
-  - **rom_boss:** Boss encounter room
-  - **rom_tutorial:** Tutorial room
+1. Start in the Sanctuary (main hub)
+2. Choose up to 3 missions for your run
+3. Buy and equip gear, assign abilities
+4. Enter a series of dungeon rounds (waves 0–9)
+5. Face a random final boss at wave 10 to earn a unique gem
+6. Collect gold and rewards from loot and missions
+7. After collecting a gem, the game resets; repeat to collect all three gems
 
-### Systems
+## Menu Overview
 
-#### Touch System
-- Multi-touch support via the object `obj_touch_split` and related objects
-- Touch areas are defined in code for user interface and controls
+- **Home:** Main hub and starting point
+- **Contracts:** Choose missions (up to 3 per run)
+- **Market:** Shop for new gear and equipment
+- **Loadout:** Equip weapons and armor
+- **Skills:** Assign and upgrade abilities
 
-#### Progress System
-- Dungeon progression is wave-based (10 waves per run)
-- Boss encounter at the final wave (wave 10)
-- Each boss defeated grants a unique gem; collecting one three gems resets the game, all gems are required to complete the game
+---
 
-#### Mission System
-- Players select up to 3 missions per wave, which affect objectives and rewards
+# 🛠 Technical Documentation
 
-#### Currency
+## Core Room Structure
+
+Room transitions are handled by direct calls to `room_goto()` in menu actions (no central controller object).
+
+**Main Rooms:**
+- `rom_start`: Main menu (continue, new run, tutorial)
+- `rom_nextFloor`: Main navigation and menu (store, equipment, home, abilities, missions)
+- `rom_dungeon`: Dungeon gameplay
+- `rom_boss`: Boss encounter to collect one of the three legendary gems, based on boss type
+- `rom_end`: Game over screen (after collecting a gem)
+- `rom_tutorial`: Tutorial
+
+## Touch System
+
+- Multi-touch support via `obj_touch_split` object
+- Touch areas defined in code for UI and controls
+
+Menu interaction uses `global.service_touch_several` for:
+- Multi-touch area detection
+- Tap gesture recognition
+- UI boundary checking
+
+## Start Screen
+- The start screen is displayed in the `rom_start` room.
+- Shows the game logo and three gem icons representing collected legendary gems.
+- Gems are stored in `components` array, with each gem represented as a struct containing:
+  - `image_index`: (number) Sprite frame index for the gem icon
+  - `obtained`: (boolean) Whether the gem has been collected
+  - `type`: (string) Always `"gem"`
+  - `text`: (string, optional) Label such as "continue" or "new run"
+- Touch input:
+  - **Tap:** Starts or continues a run (`room_goto(rom_nextFloor)`)
+  - **Hold:** Opens the tutorial (`room_goto(rom_tutorial)`)
+- Uses `obj_start` to handle input and display logic.
+
+## Menu System
+
+Managed by `obj_menu`, providing navigation between screens using a state-based system with touch input.
+
+### Menu Structure
+
+- **Bottom Navigation `gui_bottom` array, (`menu_index`):**
+  - **Market (0):** Buy and sell gear, weapons, and consumables
+  - **Loadout (1):** Manage and equip your weapons and armor
+  - **Home (2):** Return to the Home screen
+  - **Skills (3):** Assign and upgrade character abilities
+  - **Contracts (4):** Select and review missions for your run
+
+- **Top Status Bar (`gui_top` array):**
+  - Gold display (uses `spr_menu_icon_gold`)
+  - Secondary resource (placeholder)
+
+### Menu States
+
+- **default:** Main menu view (item/contract lists)
+- **selected:** Item/contract details, Contract confirmation.
+
+Menus create touch areas with `create_area()` for responsive UI across screen sizes.
+
+### Market (0)
+- Displays items for sale in the array `data_shop` generated by [`global.service_item`](../Mobile_Project/scripts/service_item/service_item.yy)
+- Allows players to view item details and purchase gear, weapons, and consumables
+- Item selection and purchase actions are handled via touch input and the menu state
+
+### Loadout (1)
+- Manage and equip your weapons and armor (2 active equipment slots available for touch selection)
+- View and compare gear stats
+- Select and equip items using touch input; menu state updates to reflect equipped gear
+
+### Home (2)
+- Return to the Home screen
+
+### Skills (3)
+- Assign and upgrade character abilities
+
+### Contracts (4)
+- Allows players to select up to 3 contracts per run
+- Missions are defined in the `data_contracts` array, generated by `global.service_filemanager`
+- Each contract is stored in a struct with the following properties:
+  - `name`: (string) Mission name
+  - `description`: (string) Mission details
+  - `reward`: (string) Reward for completing the mission
+  - `difficulty`: (number) Difficulty level
+  - `type`: (string) Type of mission (e.g., "kill", "collect")
+- Shows mission details, sidequests, and rewards
+- Contract selection and confirmation are handled via touch input and the menu state
+
+### Currency
+
 - Gold is earned from loot and completing missions
+- Displayed in the top status bar using `spr_menu_icon_gold`
 
 ---
 
-## 📱 Android Development Setup
+# 📱 Android Development Setup
 
-### Requirements
+## Requirements
 
 - Windows 10 or newer
-- GameMaker Studio 2 (latest version)
-- Java JDK 11 or newer
+- GameMaker Studio 2 (latest)
+- Java JDK 11+
 - Android SDK and NDK
 - Android device or emulator
 - USB Debugging enabled
 - USB drivers for your device
-- Gradle 8 or newer (included with GameMaker Studio 2)
+- Gradle 8+ (included with GameMaker Studio 2)
 
-### Setup Steps
+## Setup Steps
 
 1. Clone the repository:
    ```sh
@@ -74,22 +143,11 @@
    ```
 
 2. Install:
-   - GameMaker Studio 2: [YoYo Games](https://www.yoyogames.com/get)
-   - Java JDK: [Adoptium](https://adoptium.net/)
+   - [GameMaker Studio 2](https://www.yoyogames.com/get)
+   - [Java JDK (Adoptium)](https://adoptium.net/)
 
 3. Set up in GameMaker Studio 2:
-   - Set the `JAVA_HOME` environment variable  
-   This variable tells GameMaker Studio (and other tools) where to find your Java installation.  
-      **To set it on Windows:**
-      1. Find your Java installation directory (e.g., `C:\Program Files\Eclipse Adoptium\jdk-11.x.x`)
-      2. Open the Start Menu, search for "Environment Variables", and select "Edit the system environment variables"
-      3. In the System Properties window, click the "Environment Variables..." button
-      4. Under "System variables", click "New..."
-      5. For "Variable name", enter `JAVA_HOME`
-      6. For "Variable value", enter the path to your Java JDK folder (from step 1)
-      7. Click OK to save
-
-      After setting this, restart GameMaker Studio and your PC if needed.
+   - Set the `JAVA_HOME` environment variable to your Java installation directory
    - Set Android SDK and NDK paths in preferences
 
 4. Connect your device:
@@ -97,13 +155,17 @@
    - Install USB drivers
    - Use USB or emulator
 
-### Building
+## Building
 
 - Open the project in GameMaker Studio 2
 - Set the target platform to **Android**
 - Click Run or Build
 
-### Troubleshooting
+## Troubleshooting
 
 - Check all paths (SDK, NDK, JAVA)
 - Ensure correct Gradle version
+
+---
+
+For more details, see the [Projects/README.md](../README.md).
