@@ -5,15 +5,14 @@ global.service_touch_several.clear();
 // load data
 var sf = global.service_filemanager
 data_basic = sf.basic.load();
-data_shop = sf.shop.load(8, data_basic.biome, data_basic.wave);
+data_shop = sf.shop.load(9, data_basic.biome, data_basic.wave);
 data_contract = sf.contract.load(3, data_basic.biome, data_basic.wave)
 data_gear = sf.gear.load()
-show_debug_message(data_gear)
 
 touch_index = global.service_touch_several.create_area(0, 0, 0, 0, TOUCH.FULL);
 touch = undefined;
 state = "default"
-menu_index = 2;
+menu_index = -1;
 shop_index = -1;
 gear_index = -1;
 contract_index = -1;
@@ -26,7 +25,7 @@ gui_bottom = [
 ];
 gui_top = [
 	{ sprite_index: spr_menu_icon_gold, value: data_basic.gold, active_timer: 0 },
-	{ sprite_index: [spr_placeholder_8, 0], value: data_basic.wave }
+	{ sprite_index: [spr_icon_biome, data_basic.biome], value: data_basic.wave + 1 }
 ];
 
 draw_contract = function(_x, _y, w, h, contract) {
@@ -36,7 +35,8 @@ draw_contract = function(_x, _y, w, h, contract) {
 
 	// Draw biome and difficulty
 	draw_set_halign(fa_center);
-	draw_text_transformed(_x + w / 2, _y + 4, global.service_enum.biome_tostring(contract.biome), 0.5, 0.5, 0);
+	draw_sprite_ext(spr_icon_biome, contract.biome, _x + w/2, _y + 8, .5, .5, 0, c_white, 1)
+	//draw_text_transformed(_x + w / 2, _y + 4, global.service_enum.biome_tostring(contract.biome), 0.5, 0.5, 0);
 	draw_text_transformed(_x + w / 2, _y + 14, string_repeat("*", contract.difficulty), 0.5, 0.5, 0);
 
 	// Draw sidequest info (if exists)

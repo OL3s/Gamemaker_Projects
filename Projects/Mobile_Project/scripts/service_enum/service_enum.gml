@@ -1,5 +1,15 @@
 enum BIOME {
-	WOODLANDS,
+	WOODLAND,
+	SWAMP,
+	DESERT,
+	MONTAIN,
+	CAVE,
+	ICE_CAVE,
+	VOLCANIC,
+	RUINS,
+	CRYPT,
+	ABYSS,
+	
 	COUNT
 }
 
@@ -33,12 +43,21 @@ enum XP {
 	COUNT
 }
 global.service_enum = {
-    biome_tostring: function(index) {
-        switch (index) {
-            case BIOME.WOODLANDS: return "woodlands";
-            default: return "invalid enum index!";
-        }
-    },
+	biome_tostring: function(index) {
+	    switch (index) {
+	        case BIOME.WOODLAND:  return "woodland";
+	        case BIOME.SWAMP:     return "swamp";
+	        case BIOME.DESERT:    return "desert";
+	        case BIOME.MONTAIN:   return "mountain";
+	        case BIOME.CAVE:	  return "cave";
+	        case BIOME.ICE_CAVE:  return "ice cave";
+	        case BIOME.VOLCANIC:  return "volcanic";
+	        case BIOME.RUINS:     return "ruins";
+	        case BIOME.CRYPT:     return "crypt";
+	        case BIOME.ABYSS:     return "abyss";
+	        default:              return "invalid enum index!";
+	    }
+	},
 
     sidequest_tostring: function(index) {
         switch (index) {

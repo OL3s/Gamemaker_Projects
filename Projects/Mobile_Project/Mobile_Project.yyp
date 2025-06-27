@@ -62,6 +62,7 @@
     {"id":{"name":"spr_gemstones_empty","path":"sprites/spr_gemstones_empty/spr_gemstones_empty.yy",},},
     {"id":{"name":"spr_gemstones_full","path":"sprites/spr_gemstones_full/spr_gemstones_full.yy",},},
     {"id":{"name":"spr_icon_back","path":"sprites/spr_icon_back/spr_icon_back.yy",},},
+    {"id":{"name":"spr_icon_biome","path":"sprites/spr_icon_biome/spr_icon_biome.yy",},},
     {"id":{"name":"spr_icon_small_skull","path":"sprites/spr_icon_small_skull/spr_icon_small_skull.yy",},},
     {"id":{"name":"spr_item_sword_l","path":"sprites/spr_item_sword_l/spr_item_sword_l.yy",},},
     {"id":{"name":"spr_lobby_background","path":"sprites/spr_lobby_background/spr_lobby_background.yy",},},

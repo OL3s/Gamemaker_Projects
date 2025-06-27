@@ -38,6 +38,7 @@
     {"name":"spr_gemstones_empty","order":4,"path":"sprites/spr_gemstones_empty/spr_gemstones_empty.yy",},
     {"name":"spr_gemstones_full","order":3,"path":"sprites/spr_gemstones_full/spr_gemstones_full.yy",},
     {"name":"spr_icon_back","order":6,"path":"sprites/spr_icon_back/spr_icon_back.yy",},
+    {"name":"spr_icon_biome","order":12,"path":"sprites/spr_icon_biome/spr_icon_biome.yy",},
     {"name":"spr_icon_small_skull","order":5,"path":"sprites/spr_icon_small_skull/spr_icon_small_skull.yy",},
     {"name":"spr_item_sword_l","order":10,"path":"sprites/spr_item_sword_l/spr_item_sword_l.yy",},
     {"name":"spr_lobby_background","order":9,"path":"sprites/spr_lobby_background/spr_lobby_background.yy",},

@@ -50,7 +50,7 @@ global.service_filemanager = {
 			// load failiour
 			if is_undefined(_load) {
 				show_debug_message($"info: basic file missing, generating; adding to runs progress")
-				var basic_struct = { name: sf.name.basic, gold: 1000, biome: BIOME.WOODLANDS, wave: 0 };
+				var basic_struct = { name: sf.name.basic, gold: 1000, biome: BIOME.WOODLAND, wave: 0 };
 				sf.save(sf.name.basic, basic_struct);
 				
 				// add to progress
@@ -146,13 +146,13 @@ global.service_filemanager = {
 		generate_shop_array: function(shop_max, biome, wave) {
 			var array = [];
 			repeat(shop_max) { 
-				if !irandom(1)
 				var _item = choose(
 					global.service_item.get("light_sword"),
 					global.service_item.get("leather_armor")	
 				)
 				
-				array_push(array, _item) } 
+				if irandom(1) array_push(array, _item) 
+			} 
 			return array;
 		},
 		remove: function(item_index) {
@@ -328,7 +328,7 @@ global.service_filemanager = {
 					type: choose(SIDEQUEST.RESCUE, SIDEQUEST.BOSS),
 					reward: 100 * (wave+1)
 				}),
-				biome: _biome,
+				biome: choose(BIOME.WOODLAND, BIOME.SWAMP, BIOME.MONTAIN, BIOME.CAVE),
 				difficulty: clamp(wave + irandom(3), 0, 9),
 				enemy_groups: [ENEMY_GROUP.WILD_FOREST, ENEMY_GROUP.WILD_CAVE, ENEMY_GROUP.WILD_ELEMENTAL]
 			})}

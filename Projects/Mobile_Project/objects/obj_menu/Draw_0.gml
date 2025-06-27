@@ -270,47 +270,51 @@ else if (menu_index == 1) {
         var btn_w = 32;
         var btn_h = 8;
         var btn_y = right_y;
+		var is_equipped = (data_gear.index.item[0] == gear_index || data_gear.index.item[1] == gear_index || data_gear.index.armor == gear_index);
 
-        if (item.type == ITEM_TYPE.ABILITY) {
-            // Equip Lower
-            var btn_x1 = right_x;
-            draw_roundrect(btn_x1, btn_y, btn_x1 + btn_w, btn_y + btn_h, true);
-            draw_set_halign(fa_center);
-            draw_set_valign(fa_middle);
-            draw_text_transformed(btn_x1 + btn_w / 2, btn_y + btn_h / 2, "Equip Lower", 0.5, 0.5, 0);
 
-            // Equip Upper
-            var btn_x2 = right_x + btn_w + 8;
-            draw_roundrect(btn_x2, btn_y, btn_x2 + btn_w, btn_y + btn_h, true);
-            draw_text_transformed(btn_x2 + btn_w / 2, btn_y + btn_h / 2, "Equip Upper", 0.5, 0.5, 0);
+		if (!is_equipped) {
+	        if (item.type == ITEM_TYPE.ABILITY) {
+	            // Equip Lower
+	            var btn_x1 = right_x;
+	            draw_roundrect(btn_x1, btn_y, btn_x1 + btn_w, btn_y + btn_h, true);
+	            draw_set_halign(fa_center);
+	            draw_set_valign(fa_middle);
+	            draw_text_transformed(btn_x1 + btn_w / 2, btn_y + btn_h / 2, "Equip Lower", 0.5, 0.5, 0);
 
-            // Handle equip actions
-            if (touch.is_tap) {
-                if (global.service_touch_several.in_bounds_rect(touch, btn_x1, btn_y, btn_w, btn_h)) {
-                    signal.equip_gear(gear_index, true)
-					data_gear = global.service_filemanager.gear.load()
-                    audio_play_sound(snd_money2, 1, 0)
-                }
-                if (global.service_touch_several.in_bounds_rect(touch, btn_x2, btn_y, btn_w, btn_h)) {
-					signal.equip_gear(gear_index, false)
-                    data_gear = global.service_filemanager.gear.load()
-                    audio_play_sound(snd_money2, 1, 0)
-                }
-            }
-        } else if (item.type == ITEM_TYPE.ARMOR) {
-            // Equip (for armor)
-            var btn_x = right_x;
-            draw_roundrect(btn_x, btn_y, btn_x + btn_w, btn_y + btn_h, true);
-            draw_set_halign(fa_center);
-            draw_set_valign(fa_middle);
-            draw_text_transformed(btn_x + btn_w / 2, btn_y + btn_h / 2, "Equip", 0.5, 0.5, 0);
+	            // Equip Upper
+	            var btn_x2 = right_x + btn_w + 8;
+	            draw_roundrect(btn_x2, btn_y, btn_x2 + btn_w, btn_y + btn_h, true);
+	            draw_text_transformed(btn_x2 + btn_w / 2, btn_y + btn_h / 2, "Equip Upper", 0.5, 0.5, 0);
 
-            if (touch.is_tap && global.service_touch_several.in_bounds_rect(touch, btn_x, btn_y, btn_w, btn_h)) {
-				signal.equip_gear(gear_index)
-                data_gear = global.service_filemanager.gear.load()
-                audio_play_sound(snd_money2, 1, 0)
-            }
-        }
+	            // Handle equip actions
+	            if (touch.is_tap) {
+	                if (global.service_touch_several.in_bounds_rect(touch, btn_x1, btn_y, btn_w, btn_h)) {
+	                    signal.equip_gear(gear_index, true)
+						data_gear = global.service_filemanager.gear.load()
+	                    audio_play_sound(snd_money2, 1, 0)
+	                }
+	                if (global.service_touch_several.in_bounds_rect(touch, btn_x2, btn_y, btn_w, btn_h)) {
+						signal.equip_gear(gear_index, false)
+	                    data_gear = global.service_filemanager.gear.load()
+	                    audio_play_sound(snd_money2, 1, 0)
+	                }
+	            }
+	        } else if (item.type == ITEM_TYPE.ARMOR) {
+	            // Equip (for armor)
+	            var btn_x = right_x;
+	            draw_roundrect(btn_x, btn_y, btn_x + btn_w, btn_y + btn_h, true);
+	            draw_set_halign(fa_center);
+	            draw_set_valign(fa_middle);
+	            draw_text_transformed(btn_x + btn_w / 2, btn_y + btn_h / 2, "Equip", 0.5, 0.5, 0);
+
+	            if (touch.is_tap && global.service_touch_several.in_bounds_rect(touch, btn_x, btn_y, btn_w, btn_h)) {
+					signal.equip_gear(gear_index)
+	                data_gear = global.service_filemanager.gear.load()
+	                audio_play_sound(snd_money2, 1, 0)
+	            }
+	        }
+		}
 
         draw_set_halign(fa_left);
         draw_set_valign(fa_top);
@@ -433,10 +437,11 @@ else if (menu_index == 4) {
 			signal.contract_start(contract_index, data_contract.contracts);
 		}
 
-		draw_set_halign(fa_left);
-		draw_set_valign(fa_top);
 	}
 
 
 }
 #endregion
+
+draw_set_halign(fa_left);
+draw_set_valign(fa_top);
