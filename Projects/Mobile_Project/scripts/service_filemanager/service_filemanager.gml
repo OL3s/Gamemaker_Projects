@@ -50,7 +50,7 @@ global.service_filemanager = {
 			// load failiour
 			if is_undefined(_load) {
 				show_debug_message($"info: basic file missing, generating.")
-				var basic_struct = { name: sf.name.basic, gold: 0, biome: BIOME.WOODLANDS, wave: 0 };
+				var basic_struct = { name: sf.name.basic, gold: 1000, biome: BIOME.WOODLANDS, wave: 0 };
 				sf.save(sf.name.basic, basic_struct);
 				return basic_struct;
 			}
@@ -139,7 +139,14 @@ global.service_filemanager = {
 		},
 		generate_shop_array: function(shop_max, biome, wave) {
 			var array = [];
-			repeat(shop_max) { if !irandom(1) array_push(array, global.service_item.get("lsword")) } 
+			repeat(shop_max) { 
+				if !irandom(1)
+				var _item = choose(
+					global.service_item.get("light_sword"),
+					global.service_item.get("leather_armor")	
+				)
+				
+				array_push(array, _item) } 
 			return array;
 		},
 		remove: function(item_index) {

@@ -24,9 +24,7 @@ gui_bottom = [
 gui_top = [
 	{ sprite_index: spr_menu_icon_gold, value: data_basic.gold },
 	{ sprite_index: [spr_placeholder_8, 0], value: global.service_enum.biome_tostring(data_basic.biome) }
-]
-
-
+];
 
 draw_contract = function(_x, _y, w, h, contract) {
 	// Draw box
@@ -50,8 +48,10 @@ draw_weapon_store = function(_x, _y, item, is_selected, item_w, item_h, sin_offs
 	draw_sprite_ext(item.sprite_index[0], item.sprite_index[1], _x, is_selected ?_y : _y + (1.5 * sin((current_time / 300) + (sin_offset * 8)) / pi), .5, .5, 0, draw_get_color(), 1);
 	
 	draw_set_halign(fa_center);
+	draw_set_valign(fa_top);
 	draw_text_transformed(_x, _y + (item_h / 2), use_shortname ? item.name_short : item.name, .5, .5, 0);
 	draw_set_halign(fa_left);
+	draw_set_valign(fa_middle);
 	draw_text_transformed(_x + (item_w / 2), _y - (item_h / 2), item.cost, .5, .5, 0);
 }
 signal = {

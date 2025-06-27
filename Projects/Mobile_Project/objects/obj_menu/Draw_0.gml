@@ -68,10 +68,13 @@ draw_set_valign(fa_top);
 #endregion
 #region MENU SHOP
 if (menu_index == 0) {
-	/// If shop is empty
+	
 	draw_set_halign(fa_center);
 	draw_set_valign(fa_middle);
-	draw_text(room_width/2, room_height/2, "no items in the market")
+	
+	/// If shop is empty
+	if !array_length(data_shop.items)
+		draw_text(room_width/2, room_height/2, "no items in the market");
 	
 	/// Items - (1/2 of the left screen)
 	var padding_screen = [16, 24], padding_gap = 8;
@@ -167,6 +170,143 @@ if (menu_index == 0) {
 	
 }
 ///
+#endregion
+#region MENU GEAR
+else if (menu_index == 1) {
+	
+	draw_set_halign(fa_center);
+	draw_set_valign(fa_middle);
+	
+	if !array_length(data_gear.items)
+		draw_text(room_width/2, room_height/2, "no owned items.")
+	
+    // Layout
+    var padding_screen = [16, 24], padding_gap = 8;
+    var item_w_raw = 8, item_w_offset = 6, item_w = item_w_raw + item_w_offset, item_h = 8;
+    var grid_cols = 3;
+
+    var start_x = padding_screen[0];
+    var start_y = padding_screen[1];
+
+    // Get equipped indices
+    var equipped_lower = data_gear.index.item[0];
+    var equipped_upper = data_gear.index.item[1];
+    var equipped_armor = data_gear.index.armor;
+
+    // LEFT: All gear items
+    for (var i = 0; i < array_length(data_gear.items); ++i) {
+        if is_undefined(data_gear.items[i]) continue;
+        var col = i mod grid_cols;
+        var row = i div grid_cols;
+
+        var _x = start_x + col * (item_w + padding_gap);
+        var _y = start_y + row * (item_h + padding_gap);
+
+        // Highlight color if equipped
+        var item = data_gear.items[i];
+        var highlight = c_gray;
+        if (item.type == "ability") {
+            if (equipped_lower == i) highlight = c_lime;
+            else if (equipped_upper == i) highlight = c_aqua;
+        } else if (item.type == "armor") {
+            if (equipped_armor == i) highlight = c_orange;
+        }
+
+        draw_set_color(highlight);
+        try {
+            draw_weapon_store(_x, _y, item, (gear_index == i), item_w_raw, item_h, i, true)
+        }
+        catch (e) { draw_text_transformed(_x, _y, "N/A", .5, .5, 0); }
+
+        // Select item
+        if (touch.is_tap && global.service_touch_several.in_bounds_rect(touch,
+            _x - (item_w / 2) - (padding_gap / 2),
+            _y - (item_h / 2) - (padding_gap / 2),
+            item_w + padding_gap,
+            item_h + padding_gap))
+        {
+            gear_index = i;
+            state = "selected";
+            audio_play_sound(snd_click, 1, 0)
+        }
+    }
+    draw_set_color(c_white);
+
+    // RIGHT: Selected gear details and equip buttons
+    if state == "selected" && gear_index >= 0 && gear_index < array_length(data_gear.items) {
+        var item = data_gear.items[gear_index];
+
+        var padding_border = [8, 16];
+        var padding_gap = 8;
+
+        var right_x = room_width / 2 + padding_border[0];
+        var right_y = padding_border[1];
+
+        // Draw item name
+        draw_set_halign(fa_left);
+        draw_set_valign(fa_top);
+        draw_text_transformed(right_x, right_y, item.name, 0.5, 0.5, 0);
+        right_y += padding_gap;
+
+        // Draw sprite
+        var sprite_space = 12;
+        draw_set_color(c_black);
+        draw_roundrect(right_x+2, right_y+2, right_x + sprite_space*2 - 4, right_y + sprite_space*2 - 4, false)
+        draw_sprite_ext(item.sprite_index[0], item.sprite_index[1], right_x + sprite_space, right_y + sprite_space, 1, 1, 0, c_white, 1);
+        right_y += sprite_space*2;
+
+        // Draw type
+        draw_set_color(c_white);
+        draw_text_transformed(right_x, right_y, "Type: " + string(item.type), 0.5, 0.5, 0);
+        right_y += padding_gap;
+
+        // Equip buttons
+        var btn_w = 32;
+        var btn_h = 8;
+        var btn_y = right_y;
+
+        if (item.type == "ability") {
+            // Equip Lower
+            var btn_x1 = right_x;
+            draw_roundrect(btn_x1, btn_y, btn_x1 + btn_w, btn_y + btn_h, true);
+            draw_set_halign(fa_center);
+            draw_set_valign(fa_middle);
+            draw_text_transformed(btn_x1 + btn_w / 2, btn_y + btn_h / 2, "Equip Lower", 0.5, 0.5, 0);
+
+            // Equip Upper
+            var btn_x2 = right_x + btn_w + 8;
+            draw_roundrect(btn_x2, btn_y, btn_x2 + btn_w, btn_y + btn_h, true);
+            draw_text_transformed(btn_x2 + btn_w / 2, btn_y + btn_h / 2, "Equip Upper", 0.5, 0.5, 0);
+
+            // Handle equip actions
+            if (touch.is_tap) {
+                if (global.service_touch_several.in_bounds_rect(touch, btn_x1, btn_y, btn_w, btn_h)) {
+                    data_gear.index.item[0] = gear_index;
+                    audio_play_sound(snd_click, 1, 0)
+                }
+                if (global.service_touch_several.in_bounds_rect(touch, btn_x2, btn_y, btn_w, btn_h)) {
+                    data_gear.index.item[1] = gear_index;
+                    audio_play_sound(snd_click, 1, 0)
+                }
+            }
+        } else {
+            // Equip (for armor)
+            var btn_x = right_x;
+            draw_roundrect(btn_x, btn_y, btn_x + btn_w, btn_y + btn_h, true);
+            draw_set_halign(fa_center);
+            draw_set_valign(fa_middle);
+            draw_text_transformed(btn_x + btn_w / 2, btn_y + btn_h / 2, "Equip", 0.5, 0.5, 0);
+
+            if (touch.is_tap && global.service_touch_several.in_bounds_rect(touch, btn_x, btn_y, btn_w, btn_h)) {
+                data_gear.index.armor = gear_index;
+                audio_play_sound(snd_click, 1, 0)
+            }
+        }
+
+        draw_set_halign(fa_left);
+        draw_set_valign(fa_top);
+    }
+}
 #endregion
 #region MENU CONTRACT
 ///
