@@ -33,8 +33,17 @@ for (var i = 0; i < gui_count; i++) {
 		menu_index = gui_bottom[i].action;
 		state = "default"
 		shop_index = -1;
+		gear_index = -1
 		audio_play_sound(snd_click, 1, 0)
 	}
+}
+
+	// Execute back button
+if (keyboard_check_pressed(vk_backspace)) {
+    menu_index = 2
+	state = "default"
+	shop_index = -1
+	gear_index = -1
 }
 
 /// TOP UI
@@ -57,10 +66,15 @@ for (var i = 0; i < gui_count; i++) {
 
     // Draw icon
     draw_sprite_ext(spr, img_index, _x, _y, .5, .5, 0, draw_get_color(), draw_get_alpha());
+	var has_active = struct_exists(gui_top[i], "active_timer");
+	var is_active = has_active && gui_top[i].active_timer;
+	if (is_active) gui_top[i].active_timer--;
 
     // Draw value next to icon (right side, small)
-    draw_text_transformed(_x + 4, _y, string(gui_top[i].value), .5, .5, 0);
-	
+	var y_offset = (is_active) ? gui_top[i].active_timer/60 : 0;
+	draw_set_color(is_active ? c_yellow : c_white)
+    draw_text_transformed(_x + 4, _y - y_offset, string(gui_top[i].value), .5, .5, 0);
+	draw_set_color(c_white)
 }
 
 draw_set_valign(fa_top);
@@ -158,7 +172,9 @@ if (menu_index == 0) {
 			if (signal.shop_buy(shop_index, self)) {
 				state = "default";
 				shop_index = -1;
-				audio_play_sound(snd_click, 1, 0)
+				audio_play_sound(snd_money2, 1, 0)
+			} else {
+				audio_play_sound(snd_deny, 1, 0)
 			}
 		}
 	}
@@ -189,32 +205,22 @@ else if (menu_index == 1) {
     var start_y = padding_screen[1];
 
     // Get equipped indices
-    var equipped_lower = data_gear.index.item[0];
-    var equipped_upper = data_gear.index.item[1];
-    var equipped_armor = data_gear.index.armor;
+
+	
 
     // LEFT: All gear items
     for (var i = 0; i < array_length(data_gear.items); ++i) {
         if is_undefined(data_gear.items[i]) continue;
         var col = i mod grid_cols;
         var row = i div grid_cols;
-
         var _x = start_x + col * (item_w + padding_gap);
         var _y = start_y + row * (item_h + padding_gap);
 
-        // Highlight color if equipped
-        var item = data_gear.items[i];
-        var highlight = c_gray;
-        if (item.type == "ability") {
-            if (equipped_lower == i) highlight = c_lime;
-            else if (equipped_upper == i) highlight = c_aqua;
-        } else if (item.type == "armor") {
-            if (equipped_armor == i) highlight = c_orange;
-        }
-
-        draw_set_color(highlight);
+        // Highlight if equipped
+		var item = data_gear.items[i];
+		var is_equiped = (data_gear.index.item[0] == i || data_gear.index.item[1] == i || data_gear.index.armor == i);
         try {
-            draw_weapon_store(_x, _y, item, (gear_index == i), item_w_raw, item_h, i, true)
+            draw_weapon_store(_x, _y, item, (gear_index == i) || is_equiped, item_w_raw, item_h, i, true, false)
         }
         catch (e) { draw_text_transformed(_x, _y, "N/A", .5, .5, 0); }
 
@@ -265,7 +271,7 @@ else if (menu_index == 1) {
         var btn_h = 8;
         var btn_y = right_y;
 
-        if (item.type == "ability") {
+        if (item.type == ITEM_TYPE.ABILITY) {
             // Equip Lower
             var btn_x1 = right_x;
             draw_roundrect(btn_x1, btn_y, btn_x1 + btn_w, btn_y + btn_h, true);
@@ -281,15 +287,17 @@ else if (menu_index == 1) {
             // Handle equip actions
             if (touch.is_tap) {
                 if (global.service_touch_several.in_bounds_rect(touch, btn_x1, btn_y, btn_w, btn_h)) {
-                    data_gear.index.item[0] = gear_index;
-                    audio_play_sound(snd_click, 1, 0)
+                    signal.equip_gear(gear_index, true)
+					data_gear = global.service_filemanager.gear.load()
+                    audio_play_sound(snd_money2, 1, 0)
                 }
                 if (global.service_touch_several.in_bounds_rect(touch, btn_x2, btn_y, btn_w, btn_h)) {
-                    data_gear.index.item[1] = gear_index;
-                    audio_play_sound(snd_click, 1, 0)
+					signal.equip_gear(gear_index, false)
+                    data_gear = global.service_filemanager.gear.load()
+                    audio_play_sound(snd_money2, 1, 0)
                 }
             }
-        } else {
+        } else if (item.type == ITEM_TYPE.ARMOR) {
             // Equip (for armor)
             var btn_x = right_x;
             draw_roundrect(btn_x, btn_y, btn_x + btn_w, btn_y + btn_h, true);
@@ -298,8 +306,9 @@ else if (menu_index == 1) {
             draw_text_transformed(btn_x + btn_w / 2, btn_y + btn_h / 2, "Equip", 0.5, 0.5, 0);
 
             if (touch.is_tap && global.service_touch_several.in_bounds_rect(touch, btn_x, btn_y, btn_w, btn_h)) {
-                data_gear.index.armor = gear_index;
-                audio_play_sound(snd_click, 1, 0)
+				signal.equip_gear(gear_index)
+                data_gear = global.service_filemanager.gear.load()
+                audio_play_sound(snd_money2, 1, 0)
             }
         }
 

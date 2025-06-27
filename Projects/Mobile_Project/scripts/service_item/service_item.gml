@@ -8,7 +8,7 @@ global.service_item = {
 	init: function() { 
 		self.mapping = ds_map_create() 
 		ds_map_add(self.mapping, "light_sword", self.item_struct(
-			"lsword", "Light Sword", "sword", "ability", 50, [spr_item_sword_l, 0], {
+			"lsword", "Light Sword", "sword", ITEM_TYPE.ABILITY, 50, [spr_item_sword_l, 0], {
 				type: "teleport",
 				range: 6,
 				direction: "default",
@@ -22,7 +22,7 @@ global.service_item = {
 			}
 		))
 		ds_map_add(self.mapping, "leather_armor", self.item_struct(
-			"leather_armor", "Leather Armor", "leather", "armor", 30, [spr_placeholder_16, 0], {
+			"leather_armor", "Leather Armor", "leather", ITEM_TYPE.ARMOR, 30, [spr_placeholder_16, 0], {
 				physical: global.service_combat.create_physical(0, 
 					COMBAT_PHYSICAL.COLD, 80,
 					COMBAT_PHYSICAL.HEAT, 50,

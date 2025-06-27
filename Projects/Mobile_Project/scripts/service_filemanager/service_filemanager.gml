@@ -49,9 +49,15 @@ global.service_filemanager = {
 			
 			// load failiour
 			if is_undefined(_load) {
-				show_debug_message($"info: basic file missing, generating.")
+				show_debug_message($"info: basic file missing, generating; adding to runs progress")
 				var basic_struct = { name: sf.name.basic, gold: 1000, biome: BIOME.WOODLANDS, wave: 0 };
 				sf.save(sf.name.basic, basic_struct);
+				
+				// add to progress
+				var progress = sf.progress.load();
+				progress.runs ++;
+				sf.save(progress.name, progress)
+				
 				return basic_struct;
 			}
 			
@@ -244,6 +250,36 @@ global.service_filemanager = {
 			sf.basic.add_gold(gold_gain);
 
 			show_debug_message($"info: sold item {item.id} for {gold_gain} gold.");
+		},
+		equip_index: function(gear_index, is_lower = true) {
+			
+			// load
+			var gear = global.service_filemanager.gear.load()
+			var item = gear.items[gear_index];
+			var _type = item.type;
+			
+			// set index
+			if _type == ITEM_TYPE.ABILITY {
+				if (gear.index.item[0] == gear_index || gear.index.item[1] == gear_index) {
+					debugs("error: already equiped", true)
+					return;
+				}
+				gear.index.item[(is_lower) ? 0 : 1] = gear_index;
+				debugs($"info: item {item.name} selected on ability[{(is_lower) ? 0 : 1}].")
+			} else if _type == ITEM_TYPE.ARMOR {
+				if (gear.index.armor == gear_index) {
+					debugs("error: already equiped", true)
+					return;
+				}
+				gear.index.armor = gear_index;
+				debugs($"info: item {item.name} selected on armor.")
+			} else {
+				debugs("error: invalid item_type on equiping gear.", true)
+			}
+			
+			// save
+			
+			global.service_filemanager.save(gear.name, gear);
 		}
 	},
 	xp: {

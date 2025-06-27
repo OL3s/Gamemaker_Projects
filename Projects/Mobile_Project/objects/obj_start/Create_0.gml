@@ -1,9 +1,12 @@
+//global.service_resolution.apply()
 global.debug = true;
 touch = undefined;
+data_progress = global.service_filemanager.progress.load()
+show_debug_message(data_progress)
 components = [
-	{ image_index: 0, obtained: true, type: "gem"},
-	{ image_index: 1, obtained: false, type: "gem"},
-	{ image_index: 2, obtained: true, type: "gem"},
+	{ image_index: 0, obtained: data_progress.gems[0] ? true : false, type: "gem" },
+	{ image_index: 1, obtained: data_progress.gems[1] ? true : false, type: "gem" },
+	{ image_index: 2, obtained: data_progress.gems[2] ? true : false, type: "gem" },
 	
 ];
 

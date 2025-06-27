@@ -1,5 +1,6 @@
 // clear touch indexes
 global.service_touch_several.clear();
+//global.service_resolution.apply();
 
 // load data
 var sf = global.service_filemanager
@@ -7,12 +8,14 @@ data_basic = sf.basic.load();
 data_shop = sf.shop.load(8, data_basic.biome, data_basic.wave);
 data_contract = sf.contract.load(3, data_basic.biome, data_basic.wave)
 data_gear = sf.gear.load()
+show_debug_message(data_gear)
 
 touch_index = global.service_touch_several.create_area(0, 0, 0, 0, TOUCH.FULL);
 touch = undefined;
 state = "default"
 menu_index = 2;
 shop_index = -1;
+gear_index = -1;
 contract_index = -1;
 gui_bottom = [
 	{ text: "Market", type: "state", action: 0, sprite_index: 0 },
@@ -22,8 +25,8 @@ gui_bottom = [
 	{ text: "Contracts", type: "state", action: 4, sprite_index: 4 },
 ];
 gui_top = [
-	{ sprite_index: spr_menu_icon_gold, value: data_basic.gold },
-	{ sprite_index: [spr_placeholder_8, 0], value: global.service_enum.biome_tostring(data_basic.biome) }
+	{ sprite_index: spr_menu_icon_gold, value: data_basic.gold, active_timer: 0 },
+	{ sprite_index: [spr_placeholder_8, 0], value: data_basic.wave }
 ];
 
 draw_contract = function(_x, _y, w, h, contract) {
@@ -43,7 +46,7 @@ draw_contract = function(_x, _y, w, h, contract) {
 	draw_set_halign(fa_left);
 };
 
-draw_weapon_store = function(_x, _y, item, is_selected, item_w, item_h, sin_offset = 0, use_shortname = true) {
+draw_weapon_store = function(_x, _y, item, is_selected, item_w, item_h, sin_offset = 0, use_shortname = true, draw_price = true) {
 	draw_set_color(is_selected ? c_white : c_gray);
 	draw_sprite_ext(item.sprite_index[0], item.sprite_index[1], _x, is_selected ?_y : _y + (1.5 * sin((current_time / 300) + (sin_offset * 8)) / pi), .5, .5, 0, draw_get_color(), 1);
 	
@@ -52,7 +55,8 @@ draw_weapon_store = function(_x, _y, item, is_selected, item_w, item_h, sin_offs
 	draw_text_transformed(_x, _y + (item_h / 2), use_shortname ? item.name_short : item.name, .5, .5, 0);
 	draw_set_halign(fa_left);
 	draw_set_valign(fa_middle);
-	draw_text_transformed(_x + (item_w / 2), _y - (item_h / 2), item.cost, .5, .5, 0);
+	if draw_price
+		draw_text_transformed(_x + (item_w / 2), _y - (item_h / 2), item.cost, .5, .5, 0);
 }
 signal = {
 	shop_buy: function(item_index, self_id) {
@@ -61,10 +65,17 @@ signal = {
 		if (sf.shop.buy_index(item_index)) {
 			self_id.data_shop = sf.load(sf.name.shop);   // refresh
 			self_id.data_basic = sf.load(sf.name.basic); // refresh
-		}
-		
+			self_id.data_gear = sf.load(sf.name.gear);
+			self_id.gui_top[0].value = self_id.data_basic.gold;
+			self_id.gui_top[0].active_timer = 10;		// buy effect
+			return true;
+		}	return false;
 	},
 	contract_start: function(contract_index, data_contract) {
 		room_goto(rom_dungeon)
+	},
+	equip_gear: function(gear_index, is_lower = true){
+		var sf = global.service_filemanager;
+		sf.gear.equip_index(gear_index, is_lower)
 	}
 }
