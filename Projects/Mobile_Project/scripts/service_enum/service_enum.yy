@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"service_enum",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"service_enum",
+  "parent":{
+    "name":"Scripts",
+    "path":"folders/Scripts.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

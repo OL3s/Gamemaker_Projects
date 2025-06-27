@@ -1,0 +1,1 @@
+global.service_filemanager.delete_run()

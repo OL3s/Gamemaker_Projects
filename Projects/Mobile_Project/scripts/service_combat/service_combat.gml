@@ -58,8 +58,12 @@ global.service_combat = {
         }
         return effect;
     },
+	
+	get_damage_total: function(physical) {
+		return self.array_sum(physical)
+	},
 
-    update: function(combat) {
+    effect_update: function(combat) {
         var sc = global.service_combat;
         combat.image_blend = c_white;
 
@@ -78,7 +82,7 @@ global.service_combat = {
         }
     },
 
-    hit_physical: function(combat, _physical, ignore_armor = false) {
+    apply_physical: function(combat, _physical, ignore_armor = false) {
         var damage = 0;
         for (var i = 0; i < COMBAT_PHYSICAL.COUNT; i++) {
             var armor_factor = ignore_armor ? 1 : (100 / (100 + combat.armor.physical[i] * 4));
@@ -89,14 +93,14 @@ global.service_combat = {
         combat.effects[COMBAT_EFFECT.HIT] += damage;
     },
 
-    hit_effect: function(combat, _effect) {
+    apply_effect: function(combat, _effect) {
         for (var i = 0; i < COMBAT_EFFECT.COUNT; i++) {
             var reduced = _effect[i] * (100 / (100 + combat.armor.effect[i] * 4));
             combat.effects[i] += ceil(reduced);
         }
     },
 
-    hit: function(combat, _physical, _effect) {
+    apply_hit: function(combat, _physical, _effect) {
         var sc = global.service_combat;
         if (is_array(_physical)) sc.hit_physical(combat, _physical);
         if (is_array(_effect)) sc.hit_effect(combat, _effect);

@@ -1,9 +1,9 @@
 {
   "$GMScript":"v1",
-  "%Name":"service_mission",
+  "%Name":"service_dungeon",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"service_mission",
+  "name":"service_dungeon",
   "parent":{
     "name":"Scripts",
     "path":"folders/Scripts.yy",

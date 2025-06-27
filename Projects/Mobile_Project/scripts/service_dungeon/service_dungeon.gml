@@ -1,0 +1,5 @@
+
+
+global.service_dungeon = {
+		
+}

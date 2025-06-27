@@ -2,6 +2,7 @@
 var logo_h = sprite_get_height(spr_logo_game);
 draw_sprite_ext(spr_logo_game, 0, room_width/2, logo_h / 2, 1, 1, 0, c_white, 1);
 
+// Draw components (gems)
 var comp_count = array_length(components);
 var spacing = 4;
 var elem_w = 32;
@@ -17,7 +18,7 @@ for (var i = 0; i < comp_count; i++) {
 	var cy = _y + elem_h / 2;
 
 	if (comp.type == "gem") {
-		draw_sprite_ext(spr_gemstones_empty, comp.image_index, cx, cy, 1, 1, 0, make_colour_rgb(30, 30, 30), 0.8);
+		draw_sprite_ext(spr_gemstones_empty, comp.image_index, cx, cy, 1, 1, 0, make_colour_rgb(40, 40, 40), 0.9);
 		if (comp.obtained) {
 			var y_offset = (cos(current_time / 300 + (i * 200)) + 1) * 1;
 			draw_sprite(spr_gemstones_full, comp.image_index, cx, cy - y_offset);

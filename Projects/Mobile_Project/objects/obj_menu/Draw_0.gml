@@ -68,6 +68,11 @@ draw_set_valign(fa_top);
 #endregion
 #region MENU SHOP
 if (menu_index == 0) {
+	/// If shop is empty
+	draw_set_halign(fa_center);
+	draw_set_valign(fa_middle);
+	draw_text(room_width/2, room_height/2, "no items in the market")
+	
 	/// Items - (1/2 of the left screen)
 	var padding_screen = [16, 24], padding_gap = 8;
 	var item_w_raw = 8, item_w_offset = 6, item_w = item_w_raw + item_w_offset, item_h = 8;
@@ -76,10 +81,10 @@ if (menu_index == 0) {
 	var start_x = padding_screen[0];
 	var start_y = padding_screen[1];
 
-	for (var i = 0; i < array_length(data_shop); ++i) {
+	for (var i = 0; i < array_length(data_shop.items); ++i) {
 		
 		// Position
-		if is_undefined(data_shop[i]) continue;
+		if is_undefined(data_shop.items[i]) continue;
 		var col = i mod grid_cols;
 		var row = i div grid_cols;
 
@@ -87,7 +92,9 @@ if (menu_index == 0) {
 			_y = start_y + row * (item_h + padding_gap);
 
 		// Draw
-		try { draw_weapon_store(_x, _y, data_shop[i], (shop_index == i), item_w_raw, item_h, i) }
+		try { 
+			draw_weapon_store(_x, _y, data_shop.items[i], (shop_index == i), item_w_raw, item_h, i, true) 
+		}
 		catch (e) { draw_text_transformed(_x, _y, "N/A", .5, .5, 0); }
 
 		// Execute
@@ -105,8 +112,8 @@ if (menu_index == 0) {
 	
 
 	/// Showcase - (1/2 of the right screen)
-	if state == "selected" && shop_index >= 0 && shop_index < array_length(data_shop) {
-		var item = data_shop[shop_index];
+	if state == "selected" && shop_index >= 0 && shop_index < array_length(data_shop.items) {
+		var item = data_shop.items[shop_index];
 
 		var padding_border = [8, 16]; // [x, y]
 			padding_gap = 8;
@@ -122,10 +129,13 @@ if (menu_index == 0) {
 
 		// Draw sprite
 		var sprite_space = 12
+		draw_set_color(c_black);
+		draw_roundrect(right_x+2, right_y+2, right_x + sprite_space*2 - 4, right_y + sprite_space*2 - 4, false)
 		draw_sprite_ext(item.sprite_index[0], item.sprite_index[1], right_x + sprite_space, right_y + sprite_space, 1, 1, 0, c_white, 1);
 		right_y += sprite_space*2;
 
 		// Draw cost
+		draw_set_color(c_white)
 		draw_text_transformed(right_x, right_y, "Cost: " + string(item.cost), 0.5, 0.5, 0);
 		right_y += padding_gap;
 
@@ -142,7 +152,7 @@ if (menu_index == 0) {
 
 		// Execute Buy
 		if touch.is_tap && global.service_touch_several.in_bounds_rect(touch, btn_x, btn_y, btn_w, btn_h) {
-			if (signal.shop_buy(shop_index, data_shop)) {
+			if (signal.shop_buy(shop_index, self)) {
 				state = "default";
 				shop_index = -1;
 				audio_play_sound(snd_click, 1, 0)
@@ -152,8 +162,8 @@ if (menu_index == 0) {
 
 
 	// Reset alignment
-	draw_set_halign(fa_center);
-	draw_set_valign(fa_middle);
+	draw_set_halign(fa_left);
+	draw_set_valign(fa_top);
 	
 }
 ///
@@ -162,7 +172,7 @@ if (menu_index == 0) {
 ///
 else if (menu_index == 4) {
 	if state = "default" {
-		var contract_count = array_length(data_contract);
+		var contract_count = array_length(data_contract.contracts);
 		if (contract_count == 0) exit;
 
 		// Set pos values
@@ -187,7 +197,7 @@ else if (menu_index == 4) {
 				_y = (room_height / 4) + 3*(sin((current_time / 300) + (i * 20))/pi);
 			
 			// draw
-			try			{ draw_contract(_x, _y, contract_w, contract_h, data_contract[i]) }
+			try			{ draw_contract(_x, _y, contract_w, contract_h, data_contract.contracts[i]) }
 			catch(e)	{ draw_text_transformed(_x, _y, "N/A", .5, .5, 0) }
 			
 			// execute
@@ -201,8 +211,8 @@ else if (menu_index == 4) {
 	
 	else if state == "selected" {
 		// Get selected contract
-		if (contract_index < 0 || contract_index >= array_length(data_contract)) exit;
-		var contract = data_contract[contract_index];
+		if (contract_index < 0 || contract_index >= array_length(data_contract.contracts)) exit;
+		var contract = data_contract.contracts[contract_index];
 
 		// Layout
 		var padding_border = 16;
@@ -224,13 +234,39 @@ else if (menu_index == 4) {
 		draw_set_valign(fa_top);
 
 		if (contract.sidequest != undefined) {
-			draw_text_transformed(right_x, text_y, "Sidequest: " + string(contract.sidequest.type), 0.5, 0.5, 0);
+			draw_text_transformed(right_x, text_y, "Sidequest: " + global.service_enum.sidequest_tostring(contract.sidequest.type), 0.5, 0.5, 0);
 			text_y += padding_gap;
 		}
-		draw_text_transformed(right_x, text_y, "Biome: " + contract.biome, 0.5, 0.5, 0);
+
+		draw_text_transformed(right_x, text_y, "Biome: " + global.service_enum.biome_tostring(contract.biome), 0.5, 0.5, 0);
 		text_y += padding_gap;
+
 		draw_text_transformed(right_x, text_y, "Difficulty: " + string(contract.difficulty), 0.5, 0.5, 0);
 		text_y += padding_gap;
+
+		// Enemy Groups (unique, single line)
+		if (is_array(contract.enemy_groups)) {
+			var group_seen = [];
+			var group_names = "";
+
+			for (var i = 0; i < array_length(contract.enemy_groups); i++) {
+				var name = global.service_enum.enemy_group_tostring(contract.enemy_groups[i]);
+
+				if (!array_contains(group_seen, name)) {
+					array_push(group_seen, name);
+				}
+			}
+
+			for (var j = 0; j < array_length(group_seen); j++) {
+				if (j > 0) group_names += ", ";
+				group_names += group_seen[j];
+			}
+
+			if (group_names != "") {
+				draw_text_transformed(right_x, text_y, "Enemy: " + group_names, 0.5, 0.5, 0);
+				text_y += padding_gap;
+			}
+		}
 
 		// Start button
 		var btn_w = 32;
@@ -243,19 +279,15 @@ else if (menu_index == 4) {
 		draw_set_valign(fa_middle);
 		draw_text_transformed(btn_x + btn_w / 2, btn_y + btn_h / 2, "Start", 0.5, 0.5, 0);
 
-		// Execute
-		if touch.is_tap && global.service_touch_several.in_bounds_rect(touch, btn_x, btn_y, btn_w, btn_h) {
-			audio_play_sound(snd_click, 1, 0)
-			signal.contract_start(contract_index, data_contract)
+		if (touch.is_tap && global.service_touch_several.in_bounds_rect(touch, btn_x, btn_y, btn_w, btn_h)) {
+			audio_play_sound(snd_click, 1, 0);
+			signal.contract_start(contract_index, data_contract.contracts);
 		}
 
-		// Reset alignment
-		draw_set_halign(fa_center);
-		draw_set_valign(fa_middle);
+		draw_set_halign(fa_left);
+		draw_set_valign(fa_top);
 	}
 
+
 }
-
-
-
 #endregion
