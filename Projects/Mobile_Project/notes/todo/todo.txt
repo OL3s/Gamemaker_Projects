@@ -1,5 +1,10 @@
 ^ newest - oldest v
 
-
-- [] service_filemanager struct
-- [] implement working file handling in game logic
+- [ ] make enemy combat system
+- [ ] make enemy sprite system
+- [ ] add biome to enum: tundra
+- [ ] draw first biome (woodland)
+- [ ] draw first mob family (woodland)
+- [ ] generate dungeon system (woodland)
+- [x] service_filemanager struct
+- [x] implement working file handling in game logic
