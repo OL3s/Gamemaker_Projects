@@ -9,12 +9,11 @@ global.service_filemanager = {
 		progress: "save_prog.json",				// longterm progression stats
 		dungeon: "save_dungeon.json",			// currently generated dungeon data
 	},
-	/// @return {struct}
 	load: function(file_name) {
 		if !file_exists(file_name) { show_debug_message($"info: file missing; {file_name}."); return; }
-
 		var file = file_text_open_read(file_name);
-		try { var data = json_parse(file_text_read_string(file)); }
+		var data = undefined;
+		try { data = json_parse(file_text_read_string(file)); }
 		catch (e) { show_debug_message($"error: failed to parse {file_name}.") return; }
 		file_text_close(file);
 		show_debug_message($"info: file loaded; {file_name}.");
@@ -145,14 +144,12 @@ global.service_filemanager = {
 		},
 		generate_shop_array: function(shop_max, biome, wave) {
 			var array = [];
-			repeat(shop_max) { 
-				var _item = choose(
-					global.service_item.get("light_sword"),
-					global.service_item.get("leather_armor")	
-				)
-				
-				if irandom(1) array_push(array, _item) 
-			} 
+			repeat(shop_max) {
+				var _item1 = global.service_item.get("light_sword");
+				var _item2 = global.service_item.get("leather_armor");
+				var _item = choose(_item1, _item2);
+				if irandom(1) array_push(array, _item);
+			}
 			return array;
 		},
 		remove: function(item_index) {
@@ -330,7 +327,7 @@ global.service_filemanager = {
 				}),
 				biome: choose(BIOME.WOODLAND, BIOME.SWAMP, BIOME.MONTAIN, BIOME.CAVE),
 				difficulty: clamp(wave + irandom(3), 0, 9),
-				enemy_groups: [ENEMY_GROUP.WILD_FOREST, ENEMY_GROUP.WILD_CAVE, ENEMY_GROUP.WILD_ELEMENTAL]
+				enemy_groups: [ENEMY_GROUP.WILD_FOREST, ENEMY_GROUP.WILD_CAVE, ENEMY_GROUP.ELEMENTAL]
 			})}
 			return array;
 		}

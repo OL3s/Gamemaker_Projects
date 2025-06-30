@@ -18,8 +18,8 @@ enum ENEMY_GROUP {
 	WILD_DESERT,
 	WILD_TUNDRA,
 	WILD_CAVE,
-	WILD_ELEMENTAL,
-
+	
+	ELEMENTAL,
 	GOBLIN,
 	BANDIT,
 	UNDEAD,
@@ -85,7 +85,7 @@ global.service_enum = {
 	        case ENEMY_GROUP.WILD_CAVE:
 	            return "wild";
 
-	        case ENEMY_GROUP.WILD_ELEMENTAL: return "elemental";
+	        case ENEMY_GROUP.ELEMENTAL: return "elemental";
 	        case ENEMY_GROUP.GOBLIN:   return "goblin";
 	        case ENEMY_GROUP.BANDIT:   return "bandit";
 	        case ENEMY_GROUP.UNDEAD:   return "undead";

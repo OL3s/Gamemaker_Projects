@@ -214,7 +214,7 @@ else if (menu_index == 1) {
         var col = i mod grid_cols;
         var row = i div grid_cols;
         var _x = start_x + col * (item_w + padding_gap);
-        var _y = start_y + row * (item_h + padding_gap);
+        _y = start_y + row * (item_h + padding_gap);
 
         // Highlight if equipped
 		var item = data_gear.items[i];
@@ -243,7 +243,7 @@ else if (menu_index == 1) {
         var item = data_gear.items[gear_index];
 
         var padding_border = [8, 16];
-        var padding_gap = 8;
+        padding_gap = 8;
 
         var right_x = room_width / 2 + padding_border[0];
         var right_y = padding_border[1];

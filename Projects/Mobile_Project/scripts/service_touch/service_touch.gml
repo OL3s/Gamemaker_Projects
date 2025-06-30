@@ -168,7 +168,9 @@ global.service_touch_several = {
 	        analog_x: analog_x,
 	        analog_y: analog_y,
 	        analog_strength: analog_strength,
-	        analog_direction: analog_direction
+	        analog_direction: analog_direction,
+			start_x: area.start_x,
+			start_y: area.start_y
 	    };
 	},
 
