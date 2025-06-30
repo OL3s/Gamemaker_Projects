@@ -25,6 +25,45 @@ A pixel-style, real-time dungeon crawler for mobile platforms. Your ultimate goa
 - **Loadout:** Equip weapons and armor
 - **Skills:** Assign and upgrade abilities
 
+## Biomes
+
+- The game features multiple biomes, each with unique visuals and enemy types:
+  - Woodland
+  - Swamp
+  - Desert
+  - Mountain
+  - Cave
+  - Ice Cave
+  - Volcanic
+  - Ruins
+  - Crypt
+  - Abyss
+
+- The current biome determines the available choices to choose from for the next biome, as well as which contract types and enemy groups are available. It also affects the selection of shop items.
+
+## Mob Families
+
+- Enemy groups ("mob families") are categorized and vary by biome and contract:
+  - Wild (forest, desert, tundra, cave)
+  - Elemental
+  - Goblin
+  - Bandit
+  - Undead
+  - Cultist
+  - Abyssal
+
+- Each family has unique abilities and combat behaviors, influencing mission difficulty and rewards.
+
+## Combat Overhaul
+
+The combat system has been overhauled to add more depth and tactical options:
+
+- **Damage Types:** Physical Slash, Pierce, Crush, Heat, Cold, Acid
+- **Status Effects:** Hit, Stun, Slow, Burn, Freeze
+- **Armor:** Physical and effect armor reduce incoming damage and status effects
+- **Interactions:** Each attack can apply one or more damage types and effects, which interact with enemy and player armor
+- **Status Tracking:** Effects like stun, burn, and freeze are tracked and updated each frame, with visual feedback
+
 ---
 
 # 🛠 Technical Documentation
@@ -40,6 +79,17 @@ Room transitions are handled by direct calls to `room_goto()` in menu actions (n
 - `rom_boss`: Boss encounter to collect one of the three legendary gems, based on boss type
 - `rom_end`: Game over screen (after collecting a gem)
 - `rom_tutorial`: Tutorial
+
+## Combat System
+
+Combat logic is handled by `global.service_combat`:
+
+- **Initialization:** `init` sets up combat stats for each entity
+- **Damage Application:** `apply_physical` and `apply_effect` handle physical and effect-based damage on the combat struct.
+- **Status Effects:** `effect_update` updates ongoing effects like burn or freeze every frame
+- **Damage Types:** Each attack can apply multiple damage and effect types based on its physical and effect arrays, which interact with armor and status.
+- **Armor:** Armor values are stored as arrays, with each index corresponding to a specific damage or effect type
+- **Rendering:** `draw` displays health, armor, and effect bars for entities
 
 ## Touch System
 
