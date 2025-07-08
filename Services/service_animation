@@ -1,0 +1,104 @@
+enum ANIMATE_TYPE {
+	STOP,    // play once
+	BOUNCE,  // ping-pong
+	REPEAT,  // loop
+	COUNT    // internal
+}
+
+global.service_animate = {
+
+	/// @function create_struct
+	/// @desc Create new animation object
+	/// @param {asset} _sprite_index
+	/// @param {real|array<real>} _image_array - single frame or [start, end]
+	/// @param {real} _type - ANIMATE_TYPE
+	/// @param {real} _time - total animation time
+	create_struct: function(_sprite_index, _image_array, _type, _time) {
+		var is_static = !is_array(_image_array);
+		_type = (_type < 0 || _type >= ANIMATE_TYPE.COUNT || is_static) ? ANIMATE_TYPE.STOP : _type;
+		if (is_undefined(_time) || _time < 1) _time = 1;
+
+		return {
+			sprite_index: _sprite_index,                  // sprite to draw
+			image_array: _image_array,                    // static or range [start, end]
+			image_index: (is_static) ? _image_array : _image_array[0],                 // current frame
+			type: _type,                                  // animation type
+			time: [0, _time],							  // [current, max]
+			last_frame: false,                            // end reached
+			first_frame: true,                            // skip reverse on 1st
+			time_switch: 1                                // direction
+		};
+	},
+
+	/// @function update
+	/// @desc Update animation progression/frame index
+	/// @param {struct} animate_struct
+	update: function(animate_struct) {
+		var is_static = !is_array(animate_struct.image_array);
+		var is_last_frame = false;
+
+		if (is_static) {
+			animate_struct.image_index = animate_struct.image_array; // static frame
+			if (animate_struct.time[0] < animate_struct.time[1]) animate_struct.time[0] ++;
+			else is_last_frame = true 
+		} else {
+			var percentage = clamp(animate_struct.time[0] / animate_struct.time[1], 0, 1);
+			var image_count = abs(animate_struct.image_array[1] - animate_struct.image_array[0]);
+			animate_struct.image_index = round(animate_struct.image_array[0] + (image_count * percentage));
+
+			switch (animate_struct.type) {
+				case ANIMATE_TYPE.STOP:
+					is_last_frame = (animate_struct.time[0] == animate_struct.time[1]);
+					if (!is_last_frame) animate_struct.time[0] += animate_struct.time_switch;
+					break;
+
+				case ANIMATE_TYPE.REPEAT:
+					is_last_frame = (animate_struct.time[0] == animate_struct.time[1]);
+					if (!is_last_frame) animate_struct.time[0] += animate_struct.time_switch;
+					else animate_struct.time[0] = 0;
+					break;
+
+				case ANIMATE_TYPE.BOUNCE:
+					is_last_frame = (animate_struct.time[0] == animate_struct.time[1]) || (animate_struct.time[0] == 0);
+					if (is_last_frame && !animate_struct.first_frame) {
+						animate_struct.time_switch *= -1;
+					}
+					animate_struct.time[0] += animate_struct.time_switch;
+					break;
+			}
+		}
+		
+		animate_struct.time[0] = clamp(animate_struct.time[0], 0, animate_struct.time[1]);
+		animate_struct.last_frame = is_last_frame;
+		animate_struct.first_frame = false;
+		
+	},
+
+	/// @function draw
+	/// @desc Draw current animation frame
+	/// @param {struct} animate_struct
+	/// @param {real} _x
+	/// @param {real} _y
+	/// @param {real} scale =	1
+	/// @param {real} _col =	c_white
+	/// @param {real} _alpha =	1
+	/// @param {real} rot =		0
+	draw: function(animate_struct, _x, _y, scale = 1, _col = c_white, _alpha = 1, rot = 0) {
+		draw_sprite_ext(
+			animate_struct.sprite_index,
+			animate_struct.image_index,
+			_x, _y,
+			scale, scale,
+			rot,
+			_col,
+			_alpha
+		);
+	},
+	
+	/// @function is_execute
+	/// @desc Returns true only on the final frame (not first tick)
+	/// @param {struct} animate_struct
+	is_execute: function(animate_struct) {
+		return (!animate_struct.first_frame && animate_struct.last_frame);
+	}
+};
