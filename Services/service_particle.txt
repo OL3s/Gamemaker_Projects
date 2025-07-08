@@ -1,0 +1,76 @@
+enum PARTICLE {
+	FIRE,
+	FREEZE,
+	HIT,
+	STEP,
+	COUNT
+}
+	
+global.service_particle = {
+	part_system: undefined,
+	part_types: array_create(PARTICLE.COUNT, undefined),
+
+	init: function() {
+		self.part_system = part_system_create();
+
+		self.part_types[PARTICLE.FIRE] = part_type_create();
+		part_type_shape(self.part_types[PARTICLE.FIRE], pt_shape_pixel);
+		part_type_color2(self.part_types[PARTICLE.FIRE], c_yellow, c_red);
+		part_type_alpha1(self.part_types[PARTICLE.FIRE], 1);
+		part_type_life(self.part_types[PARTICLE.FIRE], 10, 20);
+		part_type_speed(self.part_types[PARTICLE.FIRE], 0.5, 1, 0, 0);
+		part_type_direction(self.part_types[PARTICLE.FIRE], 80, 100, 0, 1);
+
+		self.part_types[PARTICLE.FREEZE] = part_type_create();
+		part_type_shape(self.part_types[PARTICLE.FREEZE], pt_shape_pixel);
+		part_type_color1(self.part_types[PARTICLE.FREEZE], c_aqua);
+		part_type_alpha1(self.part_types[PARTICLE.FREEZE], 0.8);
+		part_type_life(self.part_types[PARTICLE.FREEZE], 15, 25);
+		part_type_speed(self.part_types[PARTICLE.FREEZE], 0.2, 0.5, - .02, 0);
+		part_type_direction(self.part_types[PARTICLE.FREEZE], 0, 360, 0, 5);
+		
+		self.part_types[PARTICLE.HIT] = part_type_create();
+		part_type_shape(self.part_types[PARTICLE.HIT], pt_shape_pixel);
+		part_type_color1(self.part_types[PARTICLE.HIT], c_red);
+		part_type_alpha2(self.part_types[PARTICLE.HIT], 1, 0);
+		part_type_life(self.part_types[PARTICLE.HIT], 10, 20);
+		part_type_speed(self.part_types[PARTICLE.HIT], .9, 1, 0, 0);
+		part_type_gravity(self.part_types[PARTICLE.HIT], .1, 270);
+		part_type_direction(self.part_types[PARTICLE.HIT], 90-40, 90+40, 0, 0);
+
+		self.part_types[PARTICLE.STEP] = part_type_create();
+		part_type_shape(self.part_types[PARTICLE.STEP], pt_shape_pixel);
+		part_type_color1(self.part_types[PARTICLE.STEP], c_gray);
+		part_type_alpha1(self.part_types[PARTICLE.STEP], 0.5);
+		part_type_life(self.part_types[PARTICLE.STEP], 10, 20);
+		part_type_speed(self.part_types[PARTICLE.STEP], 1, 2, 0, 0);
+		part_type_gravity(self.part_types[PARTICLE.STEP], .1, 270);
+		part_type_direction(self.part_types[PARTICLE.STEP], 90-40, 90+40, 0, 5);
+	},
+
+	destroy: function() {
+		for (var i = 0; i < PARTICLE.COUNT; i++) {
+			part_type_destroy(self.part_types[i]);
+		}
+		part_system_destroy(self.part_system);
+		self.part_system = undefined;
+	},
+	
+	emit: function(_PARTICLE, _x, _y, _count = 1, _radius = 0, _is_square = false, _chance = 1) {
+		_count ??= 1; _chance ??= 1;
+		
+		if (_chance < 1 && random(1) > _chance) return;
+		if (_PARTICLE < 0 || _PARTICLE >= PARTICLE.COUNT) return;
+		
+		repeat(_count) {
+			var xadd = 0, yadd = 0;
+			if (_radius >= 1) {
+				var dir = random(360); // degrees
+				var len = random(_radius); // spread within radius
+				xadd = (_is_square) ? random_range(-_radius, _radius) : lengthdir_x(len, dir);
+				yadd = (_is_square) ? random_range(-_radius, _radius) : lengthdir_y(len, dir);
+			}
+			part_particles_create(self.part_system, _x + xadd, _y + yadd, self.part_types[_PARTICLE], 1)
+		}
+	}
+}
